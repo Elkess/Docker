@@ -1,10 +1,13 @@
 #!/bin/bash
 
-set -e
-
 # Start MariaDB temporarily in the background
 mariadbd --skip-networking &
 MARIADB_PID=$!
+
+if ! kill -0 "$MARIADB_PID" 2>/dev/null; then
+    echo "MariaDB failed to start"
+    exit 1
+fi
 
 # Wait until MariaDB is ready
 until mariadb -e "SELECT 1" > /dev/null 2>&1; do
@@ -16,7 +19,6 @@ mariadb <<EOF
 CREATE DATABASE IF NOT EXISTS wordpress;
 CREATE USER IF NOT EXISTS 'wp-user'@'%' IDENTIFIED BY 'wp-password';
 GRANT ALL PRIVILEGES ON wordpress.* TO 'wp-user'@'%';
-FLUSH PRIVILEGES;
 EOF
 
 # Stop the temporary MariaDB server
