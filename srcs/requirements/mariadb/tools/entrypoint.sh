@@ -12,16 +12,17 @@ fi
 
 until mariadb -e "select 1337"; do
 	if ! kill -0 "$MARIADB_PID"; then
-	echo "MariaDB Failed :("
-	exit 1
+		echo "MariaDB Failed :("
+		exit 1
 	fi
-	sleep 1
+	sleep 1	echo "MariaDB Failed :("
+		exit
 done
 
 mariadb <<'EOF'
 CREATE DATABASE IF NOT EXISTS `wp-database`;
-CREATE USER IF NOT EXISTS `wp-user`@`%` IDENTIFIED BY `wp-pass`;
-GRANT ALL ON `wp-database`.* TO `wp-user`@`%`;
+CREATE USER IF NOT EXISTS 'wp-user'@'%' IDENTIFIED BY 'wp-pass';
+GRANT ALL PRIVILEGES ON `wp-database`.* TO 'wp-user'@'%';
 EOF
 
 kill "$MARIADB_PID"
