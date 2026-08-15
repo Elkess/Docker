@@ -1,4 +1,4 @@
-FROM debian:12
+FROM debian:bookworm
 
 # install maria server and create the dir that it's asking for
 RUN apt-get update && apt-get install -y mariadb-server \
