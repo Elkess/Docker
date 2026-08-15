@@ -1,19 +1,14 @@
-FROM debian:bookworm
+FROM debian:12
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    mariadb-server \
-    mariadb-client \
-    ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+# install maria server and create the dir that it's asking for
+RUN apt-get update && apt-get install -y mariadb-server \
+	&& mkdir -p /run/mysqld && chown mysql /run/mysqld
 
+	
 COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
+	
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/entrypoint.sh \
-  && mkdir -p /var/lib/mysql \
-  && chown -R mysql:mysql /var/lib/mysql
+USER mysql
 
-VOLUME ["/var/lib/mysql"]
-
-EXPOSE 3306
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

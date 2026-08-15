@@ -1,0 +1,27 @@
+docker run image_name
+docker run --name my_custom_container_name image_name
+docker ps
+docker ps -a
+docker rename old_name new_name
+docker run -it image_name
+docker start -ai container_name
+docker images
+docker images -a
+docker builder prune
+docker network create 
+docker run -it --network bridge --name container_name image_name
+docker exec -it container_name sh
+docker network
+docker network ls
+docker inspect
+docker inspect container_name -f '{{json .NetworkSettings.Networks}}'
+docker network disconnect network_name container_name
+docker network connect network_name container_name
+docker start container_name
+docker build -t image_name .
+docker build -t image_name:tag_name .
+docker build -f Dockerfile_name -t image_name .
+docker exec -it container_name bash
+docker volume
+docker volume ls
+docker volume inspect 
