@@ -25,3 +25,4 @@ docker exec -it container_name bash
 docker volume
 docker volume ls
 docker volume inspect 
+docker compose

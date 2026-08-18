@@ -1,0 +1,39 @@
+services:
+  mariadb:
+    image:
+      mariadb:mariadb
+    container_name: mariadb
+    build: ./requirements/mariadb/
+    networks:
+      - inception
+    restart: on-failure
+  wordpress:
+    image:
+      wordpress:wordpress
+    container_name: wordpress
+    build: ./requirements/wordpress/
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+    restart: on-failure
+
+  nginx:
+    image:
+      nginx:nginx
+    container_name: nginx
+    build: ./requirements/nginx/
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+    restart: on-failure
+    ports:
+      - "443:443"
+
+
+networks:
+  inception:
+    driver: bridge
+
+    
