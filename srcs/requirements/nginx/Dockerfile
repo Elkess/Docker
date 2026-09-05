@@ -1,6 +1,6 @@
 FROM debian:bookworm
 
-RUN apt-get update && apt-get install -y nginx openssl \
+RUN apt-get update && apt-get install -y nginx openssl gettext-base \
 	&& mkdir -p /etc/nginx/ssl \
 	&& openssl req -x509 -nodes -days 365 \
 		-newkey rsa:2048 \
@@ -8,8 +8,9 @@ RUN apt-get update && apt-get install -y nginx openssl \
 		-out /etc/nginx/ssl/wordpress.crt \
 		-subj "/C=MA/ST=BeniMellal/L=Khouribga/O=42/CN=wordpress"
 
-COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY conf/nginx.conf /etc/nginx/nginx.conf.template
+COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT [ "nginx" ]
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-CMD ["-g", "daemon off;"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

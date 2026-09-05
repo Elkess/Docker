@@ -1,39 +1,70 @@
 services:
   mariadb:
-    image:
-      mariadb:mariadb
     container_name: mariadb
-    build: ./requirements/mariadb/
+    build: requirements/mariadb/
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+    secrets:
+      - db_password
+      - db_root_password
     networks:
       - inception
+    volumes:
+      - mariadb_data:/var/lib/mysql
     restart: on-failure
+
   wordpress:
-    image:
-      wordpress:wordpress
     container_name: wordpress
-    build: ./requirements/wordpress/
+    build: requirements/wordpress/
+    env_file: .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
     networks:
       - inception
     depends_on:
       - mariadb
+    volumes:
+      - wordpress_data:/srv/www/wordpress
     restart: on-failure
 
   nginx:
-    image:
-      nginx:nginx
     container_name: nginx
-    build: ./requirements/nginx/
+    build: requirements/nginx/
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME}
     networks:
       - inception
-    depends_on:
-      - wordpress
-    restart: on-failure
+    volumes:
+      - wordpress_data:/srv/www/wordpress:ro
     ports:
       - "443:443"
-
+    restart: on-failure
 
 networks:
   inception:
-    driver: bridge
 
-    
+volumes:
+  mariadb_data:
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${USER}/data/mariadb
+
+  wordpress_data:
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${USER}/data/wordpress
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password
