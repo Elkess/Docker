@@ -1,5 +1,6 @@
 services:
   mariadb:
+    image:  mariadb
     container_name: mariadb
     build: requirements/mariadb/
     environment:
@@ -15,6 +16,7 @@ services:
     restart: on-failure
 
   wordpress:
+    image:  wordpress
     container_name: wordpress
     build: requirements/wordpress/
     env_file: .env
@@ -31,6 +33,7 @@ services:
     restart: on-failure
 
   nginx:
+    image: nginx
     container_name: nginx
     build: requirements/nginx/
     environment:
@@ -45,6 +48,7 @@ services:
 
 networks:
   inception:
+    name: inception
 
 volumes:
   mariadb_data:

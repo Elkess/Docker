@@ -5,9 +5,9 @@ WP_PATH="/srv/www/wordpress"
 
 cd "$WP_PATH"
 if ! wp core is-installed --allow-root >/dev/null 2>&1; then
-    DB_PASS="$(tr -d '\r\n' < /run/secrets/db_password)"
-    ADMIN_PASS="$(tr -d '\r\n' < /run/secrets/wp_admin_password)"
-    USER_PASS="$(tr -d '\r\n' < /run/secrets/wp_user_password)"
+    DB_PASS="$(cat /run/secrets/db_password)"
+    ADMIN_PASS="$(cat /run/secrets/wp_admin_password)"
+    USER_PASS="$(cat /run/secrets/wp_user_password)"
 
     if [ ! -f "$WP_PATH/wp-config.php" ]; then
         wp config create --dbname="$MYSQL_DATABASE" --dbuser="$MYSQL_USER" \
