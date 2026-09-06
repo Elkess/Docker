@@ -1,5 +1,4 @@
 #!/bin/bash
-set -eu
 
 WP_PATH="/srv/www/wordpress"
 
@@ -14,7 +13,7 @@ if ! wp core is-installed --allow-root >/dev/null 2>&1; then
             --dbpass="$DB_PASS" --dbhost="mariadb" --skip-check --allow-root
     fi
 
-    while ! wp db check --allow-root; do
+    while !( wp db check --allow-root 2>/dev/null ); do
         sleep 2
     done
 
