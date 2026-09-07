@@ -35,5 +35,5 @@ fclean: clean
 
 re: fclean up
 
-.PHONY: all up down stop start restart ps data-dirs clean fclean re
+.PHONY: down stop start ps data-dirs
 
