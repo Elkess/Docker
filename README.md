@@ -3,48 +3,49 @@
 # Inception
 
 ## Description
-Inception is a Docker-based system administration project that builds a small but complete web infrastructure from scratch. The stack contains NGINX as the only public entrypoint over HTTPS, WordPress with php-fpm, and MariaDB as a separate database service.
+Inception is a Docker-based system administration project whose goal is to build a small but complete web infrastructure from scratch. The stack is composed of three independent services: NGINX as the only public HTTPS entrypoint, WordPress with PHP-FPM, and MariaDB as the database backend.
 
-The goal is to understand how Docker images, containers, networks, volumes, and environment-based configuration work together to provide a persistent web service. The project also highlights the difference between using Docker as a packaging/runtime tool and using a virtual machine as a full system sandbox.
+The purpose of the project is to practice container orchestration, Docker networking, persistent storage, TLS configuration, and secure secret management. It also demonstrates the difference between a virtual machine and a lightweight containerized architecture, while reinforcing the need for a clean project layout and production-oriented environment variables.
 
 ## Instructions
 1. Make sure Docker and Docker Compose are installed on your machine.
-2. Configure your local domain so `<login>.42.fr` resolves to your machine IP address.
-3. Fill the `.env` file and the files in `secrets/` with your own values.
-4. Run:
+2. Configure your local domain so `melkess.42.fr` resolves to your machine's IP address.
+3. Create or update the environment file in `srcs/.env` and the credentials in the `secrets/` directory.
+4. From the repository root, run:
    ```bash
    make
    ```
-5. Open `https://<login>.42.fr` in your browser.
+5. Open `https://melkess.42.fr` in a browser.
 
-Useful targets:
-- `make` or `make up` to build and start the stack.
-- `make down` to stop the stack.
-- `make clean` to stop the stack and remove volumes.
-- `make fclean` to remove the stack and the host data directory.
-- `make re` to rebuild everything from scratch.
+Useful make targets:
+- `make` or `make up`: build the images and start the stack.
+- `make down`: stop the containers.
+- `make stop`: stop the services without removing the created resources.
+- `make clean`: remove the stack and prune unused Docker cache.
+- `make fclean`: remove the stack, volumes, and host data directory.
+- `make re`: rebuild the full environment from scratch.
 
 ## Project Description
 The stack is composed of three custom-built services:
-- NGINX terminates TLS and proxies requests to WordPress.
-- WordPress runs with php-fpm only and stores its application files on a persistent volume.
-- MariaDB stores the database on a persistent volume and is isolated from the public network.
+- NGINX terminates TLS and forwards requests to the WordPress container.
+- WordPress runs with PHP-FPM only and stores its files on a persistent named volume.
+- MariaDB stores the database data on a dedicated volume and remains isolated from the public network.
 
 Main design choices:
-- One container per service, so each component can be managed independently.
-- Named volumes for persistence, with host-backed storage under `/home/<login>/data`.
-- A dedicated Docker network so the services talk to each other without exposing internal ports publicly.
-- TLS-only access on port 443 to keep the public interface narrow.
-- Environment variables and secret files instead of hardcoded credentials.
+- One container per service so each component can be managed independently.
+- Named Docker volumes to keep data persistent under `/home/melkess/data`.
+- A dedicated Docker network so containers can communicate without exposing internal ports.
+- TLS-only access on port 443 to keep the public interface narrow and secure.
+- Environment variables and Docker secrets rather than hardcoded credentials in Dockerfiles.
 
 Comparison of key concepts:
-- Virtual Machines vs Docker: VMs virtualize the whole operating system, while Docker shares the host kernel and isolates services at the process/container level. Docker is lighter and faster to start, but a VM offers a stronger system boundary.
-- Secrets vs Environment Variables: environment variables are convenient for non-sensitive configuration, while secrets are better for passwords and credentials. This project uses both so the sensitive values stay out of Dockerfiles.
-- Docker Network vs Host Network: a Docker network gives service isolation and controlled service discovery, while host networking exposes containers directly to the host stack. The project uses a dedicated bridge network because host networking is forbidden and unnecessary.
-- Docker Volumes vs Bind Mounts: volumes are managed by Docker and are better suited for persistent service data, while bind mounts map arbitrary host paths directly into a container. This project uses named volumes for persistence and keeps their backing data under `/home/<login>/data`.
+- Virtual Machines vs Docker: a VM emulates an entire operating system, while Docker shares the host kernel and isolates processes in lightweight containers. Docker is faster and more resource-friendly, but a VM offers a broader system boundary.
+- Secrets vs Environment Variables: environment variables are appropriate for non-sensitive configuration, while secrets should contain passwords and other confidential values. This project keeps secret data out of the Dockerfiles and repository.
+- Docker Network vs Host Network: Docker networks isolate service communication and allow internal discovery without exposing all ports to the host. Host networking is forbidden here and would break the required architecture.
+- Docker Volumes vs Bind Mounts: Docker volumes are managed by Docker and are ideal for persistent service state, while bind mounts expose arbitrary host paths directly. The project uses named volumes and stores their data in `/home/melkess/data`.
 
 ## Resources
-Classic references that helped while building the project:
+Classic references used during the project:
 - Docker documentation: https://docs.docker.com/
 - Docker Compose documentation: https://docs.docker.com/compose/
 - NGINX documentation: https://nginx.org/en/docs/
@@ -52,4 +53,4 @@ Classic references that helped while building the project:
 - MariaDB knowledge base: https://mariadb.com/kb/en/
 - PHP-FPM documentation: https://www.php.net/manual/en/install.fpm.php
 
-AI was used to speed up repetitive work such as drafting the initial service wiring, checking configuration shape against the subject, and debugging startup problems in the MariaDB and WordPress entrypoints. The final implementation was verified manually with Docker Compose, container logs, and HTTPS access checks.
+AI was used to help draft the service layout, verify the correct Docker Compose structure, and debug configuration issues related to networking, TLS, and startup scripts. The final result was then validated manually with Docker Compose, container logs, and direct HTTPS checks in the browser.

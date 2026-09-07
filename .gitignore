@@ -1,2 +1,16 @@
-# secrets/
-# .env
+# Ignore local environment configuration and sensitive files
+.env
+**/.env
+secrets/
+**/secrets/
+
+# Ignore OS/editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log
+
+# Ignore local Docker state
+*.pid
+*.tmp
