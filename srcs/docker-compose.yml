@@ -8,7 +8,6 @@ services:
       MYSQL_USER: ${MYSQL_USER}
     secrets:
       - db_password
-      - db_root_password
     networks:
       - inception
     volumes:
@@ -57,20 +56,18 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/${USER}/data/mariadb
+      device: /home/melkess/data/mariadb
 
   wordpress_data:
     driver_opts:
       type: none
       o: bind
-      device: /home/${USER}/data/wordpress
+      device: /home/melkess/data/wordpress
 
 secrets:
   db_password:
     file: ../secrets/db_password.txt
-  db_root_password:
-    file: ../secrets/db_root_password.txt
   wp_admin_password:
     file: ../secrets/wp_admin_password.txt
   wp_user_password:
-    file: ../secrets/wp_user_password
+    file: ../secrets/wp_user_password.txt
