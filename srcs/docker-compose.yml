@@ -42,7 +42,7 @@ services:
     depends_on:
       - wordpress
     volumes:
-      - wordpress_data:/srv/www/wordpress:ro
+      - wordpress_data:/srv/www/wordpress
     ports:
       - "443:443"
     restart: on-failure
