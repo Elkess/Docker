@@ -13,6 +13,6 @@ mariadb <<EOF
     GRANT ALL PRIVILEGES ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%';
 EOF
 
-mariadb-admin -p shutdown
+mariadb-admin shutdown
 
 exec mariadbd --user=mysql
