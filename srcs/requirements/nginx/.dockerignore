@@ -1,10 +1,2 @@
-# Exclude local editor and build artifacts
 .git
 .gitignore
-Dockerfile
-*.log
-*.tmp
-*.swp
-*.swo
-
-# Keep the Docker build context minimal
