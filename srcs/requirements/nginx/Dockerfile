@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:12
 
 RUN apt-get update && apt-get install -y nginx openssl \
 	&& mkdir -p /etc/nginx/ssl \
@@ -6,8 +6,8 @@ RUN apt-get update && apt-get install -y nginx openssl \
 		-newkey rsa:2048 \
 		-keyout /etc/nginx/ssl/wordpress.key \
 		-out /etc/nginx/ssl/wordpress.crt \
-		-subj "/C=MA/ST=Khouribga/L=Khouribga/O=1337/CN=wordpress"
+		-subj "/CN=melkess.42.fr"
 
 COPY conf/nginx.conf /etc/nginx/conf.d/my.conf
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

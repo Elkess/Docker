@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:12
 
 RUN apt-get update && apt-get install -y mariadb-server \
 	&& sed -i 's/^bind-address\s*=.*/bind-address = 0.0.0.0/' \

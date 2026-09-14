@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:12
 
 RUN apt-get update && apt-get install -y php-fpm php-cli php-mysql mariadb-client curl \
     && curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
