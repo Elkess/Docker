@@ -148,10 +148,10 @@ URIs: https://download.docker.com/linux/debian
 #   Load operating system information into the shell.
 #
 # echo "$VERSION_CODENAME"
-#   Print your Debian codename (for example: bookworm).
+#   Print your Debian codename (for example: 12).
 #
 # Final result might become:
-# Suites: bookworm
+# Suites: 12
 Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
 
 # Use Docker's stable release channel.
