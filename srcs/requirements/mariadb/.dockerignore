@@ -1,0 +1,11 @@
+# Exclude local build context noise
+.git
+.gitignore
+Dockerfile
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Keep only the files required to build the image
+# The actual runtime configuration is handled by the entrypoint script.

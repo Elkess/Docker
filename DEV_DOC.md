@@ -1,63 +1,74 @@
 # Developer Documentation
 
 ## Prerequisites
-- Docker Engine
-- Docker Compose
-- A local domain entry that points `<login>.42.fr` to your machine IP
-- A Linux machine or virtual machine, as required by the subject
+- Docker Engine and Docker Compose installed on a Linux VM or host.
+- A valid local DNS mapping such as `melkess.42.fr` -> machine IP.
+- The repository checked out at the project root.
+- Permission to create files under `/home/melkess/data`.
 
-## Configuration Files
-The project uses:
-- `srcs/.env` for shared configuration values such as the domain name and database settings.
-- `secrets/credentials.txt` for WordPress account passwords.
-- `secrets/db_password.txt` for the MariaDB application password.
-- `secrets/db_root_password.txt` for the MariaDB root password.
+## Environment Setup
+The stack uses a shared environment file at `srcs/.env` and local secret files under `secrets/`.
 
-The Dockerfiles are located under `srcs/requirements/` and are one per service.
+Typical values include:
+- `DOMAIN_NAME`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+
+Sensitive credentials must stay out of the repository. The project expects files such as:
+- `secrets/db_password.txt`
+- `secrets/db_root_password.txt`
+- `secrets/wp_admin_password.txt`
+- `secrets/wp_user_password.txt`
 
 ## Build and Launch
-Use the Makefile from the repository root:
+From the repository root, the project can be started with:
 ```bash
 make
 ```
-This creates the persistent host folders, builds the images, and starts the stack.
+This target creates the host data directories, builds the images, and starts the stack with Docker Compose.
 
-Other targets:
-- `make build` to build the images only.
-- `make up` to build and start the stack.
-- `make stop` to stop the containers without removing them.
-- `make down` to stop and remove the containers.
-- `make clean` to remove the containers, network, and volumes.
-- `make fclean` to remove the stack state and the host data directory.
-- `make re` to reset and relaunch everything.
+Useful Makefile targets:
+```bash
+make up        # build and start the project
+make down      # stop the running services
+make stop      # stop services without removing them
+make clean     # stop and remove the stack
+make fclean    # remove volumes and host data directory
+make re        # restart everything from scratch
+```
 
-## Docker Compose Operations
-The stack is defined in `srcs/docker-compose.yml`.
+## Docker Compose Commands
+The compose file is located at `srcs/docker-compose.yml`.
 
 Useful commands:
 ```bash
 docker compose -f srcs/docker-compose.yml ps
-docker compose -f srcs/docker-compose.yml logs
+docker compose -f srcs/docker-compose.yml logs -f
+docker compose -f srcs/docker-compose.yml down
+docker compose -f srcs/docker-compose.yml up --build -d
 ```
 
 ## Data Persistence
-Persistent data is stored in named Docker volumes:
-- `mariadb_data` for the database
-- `wordpress_data` for the WordPress files
+The project uses named Docker volumes:
+- `mariadb_data` for the MariaDB state.
+- `wordpress_data` for the WordPress files and plugins.
 
-Both volumes are backed by host directories under `/home/<login>/data`.
+The host-side storage is created under `/home/melkess/data` and corresponds to the paths used by the Docker volume configuration. This ensures that the database and WordPress content persist across restarts.
 
-If you need to reset the persistent state, use:
+To reset the data safely:
 ```bash
 make clean
 ```
-If you need to remove the host-side data directory as well, use:
+
+To remove the host data entirely:
 ```bash
 make fclean
 ```
 
-## Notes for Maintenance
-- NGINX is the only public service and should stay on port 443.
-- WordPress runs with php-fpm only and must not contain nginx.
-- MariaDB must remain isolated from the public interface.
-- Avoid hardcoded credentials in Dockerfiles; keep them in the secret files and environment configuration.
+## Maintenance Notes
+- NGINX must stay as the only public service and should remain bound to port 443.
+- WordPress runs with PHP-FPM only; it must not embed NGINX.
+- MariaDB must not be exposed publicly and must communicate through the Docker network.
+- Keep all credentials in `secrets/` or in the `.env` file, never as hardcoded values inside Dockerfiles.
+- Do not use `tail -f`, shell loops, or background daemons as a workaround for the container entrypoints.

@@ -1,28 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 
-# Start MariaDB temporarily in the background
-mariadbd --skip-networking &
-MARIADB_PID=$!
+mariadbd --user=mysql &
 
-if ! kill -0 "$MARIADB_PID" 2>/dev/null; then
-    echo "MariaDB failed to start"
-    exit 1
-fi
+until mariadb -e "SELECT 1" 2>/dev/null; do sleep 1; done
 
-# Wait until MariaDB is ready
-until mariadb -e "SELECT 1" > /dev/null 2>&1; do
-    sleep 1
-done
+PASS=$(cat /run/secrets/db_password)
 
-# Create the WordPress database
 mariadb <<EOF
-CREATE DATABASE IF NOT EXISTS wordpress;
-CREATE USER IF NOT EXISTS 'wp-user'@'%' IDENTIFIED BY 'wp-password';
-GRANT ALL PRIVILEGES ON wordpress.* TO 'wp-user'@'%';
+    CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\`;
+    CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$PASS';
+    GRANT ALL PRIVILEGES ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%';
 EOF
 
-# Stop the temporary MariaDB server
 mariadb-admin shutdown
 
-# Start the real MariaDB server
-exec mariadbd
+exec mariadbd --user=mysql

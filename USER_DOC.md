@@ -1,50 +1,64 @@
 # User Documentation
 
 ## Services Provided
-This stack provides:
-- NGINX as the public HTTPS entrypoint.
-- WordPress as the website and administration frontend.
-- MariaDB as the database backend.
+This stack provides three main services:
+- NGINX as the only public HTTPS entrypoint on port 443.
+- WordPress with PHP-FPM as the website and administrative dashboard.
+- MariaDB as the database backend that stores the site data.
 
-The public website is available at `https://<login>.42.fr`.
+The public website is available at `https://melkess.42.fr`.
 
 ## Start and Stop the Project
-From the repository root, use:
+From the repository root, launch the project with:
 ```bash
 make
 ```
-or:
+You can also use:
 ```bash
 make up
 ```
 
-To stop the stack:
+To stop the stack without deleting data:
 ```bash
 make down
 ```
 
-To stop the stack and remove the persistent volumes:
+To stop the stack and remove persistent volumes:
 ```bash
 make clean
 ```
 
 ## Access the Website and Administration Panel
-- Open `https://<login>.42.fr` in your browser.
-- The WordPress administration area is available at `https://<login>.42.fr/wp-admin`.
-- If your browser warns about the certificate, accept the self-signed certificate for local development.
+- Open `https://melkess.42.fr` in your browser.
+- The WordPress administration area is available at `https://melkess.42.fr/wp-admin`.
+- If the browser warns about the self-signed certificate, accept the warning for this local project setup.
+- Plain HTTP access should not work because the stack is configured to expose only HTTPS on port 443.
 
-## Credentials
-Credentials are stored in the `secrets/` folder:
-- `secrets/credentials.txt` for the WordPress administrator and user passwords.
-- `secrets/db_password.txt` for the WordPress database user password.
-- `secrets/db_root_password.txt` for the MariaDB root password.
+## Credentials and Secret Files
+The sensitive values are stored locally in the `secrets/` directory:
+- `secrets/wp_admin_password.txt` contains the WordPress administrator password.
+- `secrets/wp_user_password.txt` contains the WordPress normal user password.
+- `secrets/db_password.txt` contains the database user password.
+- `secrets/db_root_password.txt` contains the MariaDB root password.
 
-If you change them, keep the same keys and update the project environment consistently.
+Do not commit these files to Git. Use the same values in the environment configuration when updating credentials.
 
-## Check That Services Are Running
+## Check That the Services Are Running Correctly
 Useful checks:
-- `docker compose -f srcs/docker-compose.yml ps` to see the containers.
-- `docker volume ls` to list the persistent volumes.
-- `docker volume inspect mariadb_data` and `docker volume inspect wordpress_data` to confirm persistence.
-- Open the website in a browser and verify that the WordPress homepage loads over HTTPS.
-- Confirm that `http://<login>.42.fr` does not serve the site.
+```bash
+docker compose -f srcs/docker-compose.yml ps
+```
+
+To verify persistence:
+```bash
+docker volume ls
+docker volume inspect mariadb_data
+docker volume inspect wordpress_data
+```
+
+The volume inspection output should include the host data path under `/home/melkess/data`.
+
+You can also confirm the installation is working by:
+- opening the homepage over HTTPS,
+- verifying that the WordPress dashboard loads,
+- confirming that the stack does not expose HTTP on port 80.
