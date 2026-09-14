@@ -19,12 +19,12 @@ fi
 if ! wp core is-installed --allow-root >/dev/null 2>&1; then
 
     wp core install --url="https://$DOMAIN_NAME" --title="$WP_TITLE" --admin_user="$WP_ADMIN_USER" \
-    --admin_password="$ADMIN_PASS" --admin_email="$WP_ADMIN_EMAIL" --allow-root --skip-email
+    --admin_password="$ADMIN_PASS" --admin_email="$WP_ADMIN_EMAIL" --allow-root
 
     wp user create "$WP_USER" "$WP_USER_EMAIL" \
         --role=author \
         --user_pass="$USER_PASS" \
-        --allow-root --send-email=false
+        --allow-root
 fi
 
 chown -R www-data: "$WP_PATH"

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y php-fpm php-cli php-mysql mariadb-clien
     && sed -i 's|^listen = .*|listen = 9000|' /etc/php/8.2/fpm/pool.d/www.conf
 
 COPY tools/entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+    && ln -s /bin/true /usr/sbin/sendmail
 
 ENTRYPOINT [ "entrypoint.sh" ]

@@ -35,8 +35,6 @@ services:
     image: nginx:1
     container_name: nginx
     build: requirements/nginx/
-    environment:
-      DOMAIN_NAME: ${DOMAIN_NAME}
     networks:
       - inception
     depends_on:
