@@ -1,56 +1,122 @@
 *This project has been created as part of the 42 curriculum by melkess.*
 
-# Inception
+# Description
 
-## Description
-Inception is a Docker-based system administration project whose goal is to build a small but complete web infrastructure from scratch. The stack is composed of three independent services: NGINX as the only public HTTPS entrypoint, WordPress with PHP-FPM, and MariaDB as the database backend.
+Inception is a Docker-based infrastructure project. It runs a small WordPress
+website through three dedicated services:
 
-The purpose of the project is to practice container orchestration, Docker networking, persistent storage, TLS configuration, and secure secret management. It also demonstrates the difference between a virtual machine and a lightweight containerized architecture, while reinforcing the need for a clean project layout and production-oriented environment variables.
+- NGINX terminates HTTPS and forwards PHP requests to WordPress.
+- WordPress runs PHP-FPM and WP-CLI.
+- MariaDB stores the WordPress database.
+
+The services are built from local Dockerfiles based on Debian Bookworm and are
+connected through the `inception` Docker network. WordPress files and MariaDB
+data persist in named Docker volumes backed by `/home/melkess/data` on the
+host. NGINX is the only published entry point and exposes port 443.
+
+## Project Structure
+
+- `Makefile`: build, start, stop, clean, and status commands.
+- `srcs/docker-compose.yml`: services, network, volumes, and secrets.
+- `srcs/requirements/`: one Dockerfile and service configuration per service.
+- `secrets/`: local password files used by Docker Compose secrets.
+
+## Main Design Choices
+
+### Docker and virtual machines
+
+A virtual machine includes a complete guest operating system and its own
+kernel. Docker containers share the host kernel and isolate processes using
+Linux kernel features. Containers are therefore lighter and start faster,
+while virtual machines provide stronger operating-system-level separation.
+
+### Secrets and environment variables
+
+Environment variables are appropriate for non-sensitive configuration such as
+the domain, database name, and WordPress usernames. Passwords are supplied as
+Docker secrets and read from `/run/secrets`, so they are not written directly
+in Dockerfiles or Compose environment values.
+
+### Docker network and host network
+
+The `inception` bridge network gives the containers private service-to-service
+DNS and connectivity. The containers can use names such as `mariadb` without
+publishing their internal ports. Host networking would remove this isolation
+and make a container share the host network namespace.
+
+### Docker volumes and bind mounts
+
+Docker volumes are managed by Docker and are convenient for persistent
+container data. A bind mount maps an explicit host path. This project uses
+named volumes with local driver options so Docker manages the volume names
+while the data is stored at the required host paths under
+`/home/melkess/data`.
 
 ## Instructions
-1. Make sure Docker and Docker Compose are installed on your machine.
-2. Configure your local domain so `melkess.42.fr` resolves to your machine's IP address.
-3. Create or update the environment file in `srcs/.env` and the credentials in the `secrets/` directory.
-4. From the repository root, run:
-   ```bash
-   make
-   ```
-5. Open `https://melkess.42.fr` in a browser.
 
-Useful make targets:
-- `make` or `make up`: build the images and start the stack.
-- `make down`: stop the containers.
-- `make stop`: stop the services without removing the created resources.
-- `make clean`: remove the stack and prune unused Docker cache.
-- `make fclean`: remove the stack, volumes, and host data directory.
-- `make re`: rebuild the full environment from scratch.
+### Prerequisites
 
-## Project Description
-The stack is composed of three custom-built services:
-- NGINX terminates TLS and forwards requests to the WordPress container.
-- WordPress runs with PHP-FPM only and stores its files on a persistent named volume.
-- MariaDB stores the database data on a dedicated volume and remains isolated from the public network.
+- A Linux virtual machine with Docker Engine and the Docker Compose plugin.
+- A user allowed to run Docker commands.
+- The local password files in `secrets/`.
+- A hosts entry mapping `melkess.42.fr` to the VM IP address.
 
-Main design choices:
-- One container per service so each component can be managed independently.
-- Named Docker volumes to keep data persistent under `/home/melkess/data`.
-- A dedicated Docker network so containers can communicate without exposing internal ports.
-- TLS-only access on port 443 to keep the public interface narrow and secure.
-- Environment variables and Docker secrets rather than hardcoded credentials in Dockerfiles.
+Create `srcs/.env` locally with the non-secret configuration expected by the
+Compose file and WordPress entrypoint:
 
-Comparison of key concepts:
-- Virtual Machines vs Docker: a VM emulates an entire operating system, while Docker shares the host kernel and isolates processes in lightweight containers. Docker is faster and more resource-friendly, but a VM offers a broader system boundary.
-- Secrets vs Environment Variables: environment variables are appropriate for non-sensitive configuration, while secrets should contain passwords and other confidential values. This project keeps secret data out of the Dockerfiles and repository.
-- Docker Network vs Host Network: Docker networks isolate service communication and allow internal discovery without exposing all ports to the host. Host networking is forbidden here and would break the required architecture.
-- Docker Volumes vs Bind Mounts: Docker volumes are managed by Docker and are ideal for persistent service state, while bind mounts expose arbitrary host paths directly. The project uses named volumes and stores their data in `/home/melkess/data`.
+```dotenv
+DOMAIN_NAME=melkess.42.fr
+MYSQL_DATABASE=wordpress
+MYSQL_USER=wpuser
+WP_TITLE=Inception
+WP_ADMIN_USER=siteowner
+WP_ADMIN_EMAIL=siteowner@example.com
+WP_USER=editor
+WP_USER_EMAIL=editor@example.com
+```
+
+The administrator username must not contain `admin` or `administrator`.
+Keep `.env` and all files under `secrets/` local.
+
+### Build and run
+
+From the repository root:
+
+```sh
+make
+```
+
+Open `https://melkess.42.fr` in a browser. The certificate is self-signed,
+so a browser warning is expected in a local evaluation environment.
+
+Useful commands:
+
+```sh
+make ps       # Show service status
+make stop     # Stop containers without removing them
+make start    # Start existing containers
+make down     # Stop and remove the Compose containers and network
+make restart  # Recreate the stack
+make fclean   # Remove Docker resources and local project data
+```
 
 ## Resources
-Classic references used during the project:
-- Docker documentation: https://docs.docker.com/
-- Docker Compose documentation: https://docs.docker.com/compose/
-- NGINX documentation: https://nginx.org/en/docs/
-- WordPress documentation: https://wordpress.org/documentation/
-- MariaDB knowledge base: https://mariadb.com/kb/en/
-- PHP-FPM documentation: https://www.php.net/manual/en/install.fpm.php
 
-AI was used to help draft the service layout, verify the correct Docker Compose structure, and debug configuration issues related to networking, TLS, and startup scripts. The final result was then validated manually with Docker Compose, container logs, and direct HTTPS checks in the browser.
+- [Docker architecture](https://dev.to/srinivasamcjf/inside-docker-the-complete-architecture-explained-from-cli-to-kernel-4mf1)
+- [Container runtime shims](https://iximiuz.com/en/posts/implementing-container-runtime-shim/)
+- [PHP-FPM with NGINX](https://www.digitalocean.com/community/tutorials/php-fpm-nginx)
+- [HTTP requests](https://http.dev/request)
+- [URLs](https://http.dev/url)
+- [Diffie-Hellman key exchange](https://dti-techs.gitbook.io/practical-foundations-in-cybersecurity/5.-cryptography-and-wireless-security/the-ssl-tls-handshake/the-diffie-hellman-key-exchange)
+- [Diffie-Hellman implementation details](https://crackingwalnuts.com/cryptography-internals/diffie-hellman-key-exchange)
+- [Akrou's Inception notes](https://docs.google.com/document/d/1yMpVQlpnKgkOwC7c1HRZM56knKZXjkQt5qs3MsHAmZ8/edit?pli=1&tab=t.a3yxzcapnwen)
+- [OverlayFS and Docker](https://dev.to/hrrydgls/overlayfs-the-magic-behind-docker-52c6)
+- [Docker networking](https://spacelift.io/blog/docker-networking#how-docker-networking-works)
+- [Docker Engine networking documentation](https://docs.docker.com/engine/network/)
+- [Docker network types](https://www.aidenwebb.com/posts/dockers-seven-network-types-and-when-to-use-them/)
+
+AI was used as a study and writing aid: to organize documentation, clarify
+Docker and networking terminology, and review the instructions against the
+project files. The implementation, configuration, and commands remain tied to
+the local repository and were checked against the actual Compose file,
+Makefile, Dockerfiles, and entrypoint scripts.

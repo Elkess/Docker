@@ -1,74 +1,102 @@
 # Developer Documentation
 
 ## Prerequisites
-- Docker Engine and Docker Compose installed on a Linux VM or host.
-- A valid local DNS mapping such as `melkess.42.fr` -> machine IP.
-- The repository checked out at the project root.
-- Permission to create files under `/home/melkess/data`.
 
-## Environment Setup
-The stack uses a shared environment file at `srcs/.env` and local secret files under `secrets/`.
+- Linux virtual machine.
+- Docker Engine and the Docker Compose plugin.
+- Permission to run Docker commands.
+- A local DNS or `/etc/hosts` entry for `melkess.42.fr`.
 
-Typical values include:
-- `DOMAIN_NAME`
-- `MYSQL_DATABASE`
-- `MYSQL_USER`
-- `MYSQL_PASSWORD`
+## Local Configuration
 
-Sensitive credentials must stay out of the repository. The project expects files such as:
-- `secrets/db_password.txt`
-- `secrets/db_root_password.txt`
-- `secrets/wp_admin_password.txt`
-- `secrets/wp_user_password.txt`
+Create `srcs/.env` with the non-sensitive values consumed by Compose and the
+WordPress entrypoint:
+
+```dotenv
+DOMAIN_NAME=melkess.42.fr
+MYSQL_DATABASE=wordpress
+MYSQL_USER=wpuser
+WP_TITLE=Inception
+WP_ADMIN_USER=siteowner
+WP_ADMIN_EMAIL=siteowner@example.com
+WP_USER=editor
+WP_USER_EMAIL=editor@example.com
+```
+
+Create or verify these local files before the first build:
+
+```text
+secrets/db_password.txt
+secrets/wp_admin_password.txt
+secrets/wp_user_password.txt
+```
+
+The `.gitignore` excludes both `.env` files and the `secrets/` directory.
 
 ## Build and Launch
-From the repository root, the project can be started with:
-```bash
-make
-```
-This target creates the host data directories, builds the images, and starts the stack with Docker Compose.
 
-Useful Makefile targets:
-```bash
-make up        # build and start the project
-make down      # stop the running services
-make stop      # stop services without removing them
-make clean     # stop and remove the stack
-make fclean    # remove volumes and host data directory
-make re        # restart everything from scratch
+Run all commands from the repository root:
+
+```sh
+make data-dirs
+make up
+make ps
 ```
 
-## Docker Compose Commands
-The compose file is located at `srcs/docker-compose.yml`.
+`make up` creates the host data directories, builds the three local images,
+and starts the Compose project in detached mode. The service definitions are
+in `srcs/docker-compose.yml` and the Dockerfiles are in
+`srcs/requirements/{mariadb,wordpress,nginx}`.
 
-Useful commands:
-```bash
+The images are built locally from Debian Bookworm. No ready-made application
+image is used. NGINX publishes only `443:443`; MariaDB and PHP-FPM remain
+internal to the Docker network.
+
+## Container Management
+
+```sh
 docker compose -f srcs/docker-compose.yml ps
-docker compose -f srcs/docker-compose.yml logs -f
-docker compose -f srcs/docker-compose.yml down
-docker compose -f srcs/docker-compose.yml up --build -d
+docker compose -f srcs/docker-compose.yml logs -f nginx
+docker compose -f srcs/docker-compose.yml exec wordpress sh
+docker compose -f srcs/docker-compose.yml exec mariadb mariadb -u root
+make stop
+make start
+make down
 ```
 
-## Data Persistence
-The project uses named Docker volumes:
-- `mariadb_data` for the MariaDB state.
-- `wordpress_data` for the WordPress files and plugins.
+Use `make clean` to remove unused Docker resources. `make fclean` additionally
+removes images, volumes, networks, and `/home/melkess/data`; use it only when
+resetting the project completely.
 
-The host-side storage is created under `/home/melkess/data` and corresponds to the paths used by the Docker volume configuration. This ensures that the database and WordPress content persist across restarts.
+## Persistence
 
-To reset the data safely:
-```bash
-make clean
+The Compose file declares two named volumes:
+
+- `mariadb_data` maps to `/home/melkess/data/mariadb` and contains MariaDB data.
+- `wordpress_data` maps to `/home/melkess/data/wordpress` and contains the
+  WordPress files shared by the WordPress and NGINX services.
+
+Inspect the mappings with:
+
+```sh
+docker volume ls
+docker volume inspect mariadb_data
+docker volume inspect wordpress_data
 ```
 
-To remove the host data entirely:
-```bash
-make fclean
+The local driver options use the required host paths while keeping the storage
+declared as named Docker volumes. Do not delete these directories when testing
+restarts or persistence.
+
+## Troubleshooting
+
+```sh
+docker compose -f srcs/docker-compose.yml logs mariadb
+docker compose -f srcs/docker-compose.yml logs wordpress
+docker compose -f srcs/docker-compose.yml logs nginx
+docker network inspect inception
 ```
 
-## Maintenance Notes
-- NGINX must stay as the only public service and should remain bound to port 443.
-- WordPress runs with PHP-FPM only; it must not embed NGINX.
-- MariaDB must not be exposed publicly and must communicate through the Docker network.
-- Keep all credentials in `secrets/` or in the `.env` file, never as hardcoded values inside Dockerfiles.
-- Do not use `tail -f`, shell loops, or background daemons as a workaround for the container entrypoints.
+If WordPress starts before MariaDB is ready, the WordPress entrypoint retries
+the database check. If the site is reinitialized, verify that the secret files,
+`.env` values, and the persistent volume contents are consistent.
